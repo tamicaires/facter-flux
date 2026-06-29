@@ -5,6 +5,7 @@
   "description": "Facter Flux - Quick capture & intelligent organization",
   "scripts": {
     "dev": "next dev --port 3006",
+    "postinstall": "prisma generate",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
@@ -19,7 +20,7 @@
     "clean": "rm -rf .next node_modules"
   },
   "dependencies": {
-    "@facter/ds-core": "link:../facter-design-system/packages/core",
+    "@facter/ds-core": "file:./packages/ds-core",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^6.9.0",
     "@tanstack/react-query": "^5.62.0",
@@ -30,6 +31,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.1",
+    "recharts": "^3.9.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "zod": "3.23.8",

@@ -1,0 +1,59 @@
+/*
+ * Facter Vagas Theme
+ * Primary: Roxo (262 83% 58%)
+ */
+
+:root {
+  --background: 0 0% 98%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 262 83% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 270 10% 96%;
+  --secondary-foreground: 262 10% 10%;
+  --muted: 270 10% 94%;
+  --muted-foreground: 262 5% 46%;
+  --accent: 270 10% 96%;
+  --accent-foreground: 262 10% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 270 10% 90%;
+  --input: 270 10% 90%;
+  --ring: 262 83% 58%;
+  --radius: 0.5rem;
+  --chart-1: 262 83% 58%;
+  --chart-2: 262 83% 48%;
+  --chart-3: 262 83% 68%;
+  --chart-4: 340 75% 55%;
+  --chart-5: 30 80% 55%;
+}
+
+.dark {
+  --background: 262 50% 6%;
+  --foreground: 0 0% 95%;
+  --card: 262 50% 8%;
+  --card-foreground: 0 0% 95%;
+  --popover: 262 50% 8%;
+  --popover-foreground: 0 0% 95%;
+  --primary: 262 83% 65%;
+  --primary-foreground: 262 50% 10%;
+  --secondary: 262 30% 17%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 262 30% 17%;
+  --muted-foreground: 262 20% 65%;
+  --accent: 262 30% 17%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 50%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 262 30% 17%;
+  --input: 262 30% 17%;
+  --ring: 262 83% 65%;
+  --chart-1: 262 83% 65%;
+  --chart-2: 262 83% 55%;
+  --chart-3: 262 83% 75%;
+  --chart-4: 340 75% 55%;
+  --chart-5: 30 80% 55%;
+}
