@@ -185,3 +185,22 @@ export async function archiveEntryAction(id: string): Promise<ActionResult<Seria
     return fetchAndSerializeEntry(entry.id);
   });
 }
+
+export interface DashboardStats {
+  inboxCount: number;
+  pinsCount: number;
+  activeTasksCount: number;
+  linksCount: number;
+}
+
+export async function getDashboardStatsAction(): Promise<ActionResult<DashboardStats>> {
+  return handleAction(async () => {
+    const [inboxCount, pinsCount, activeTasksCount, linksCount] = await Promise.all([
+      prisma.entry.count({ where: { status: 'INBOX' } }),
+      prisma.entry.count({ where: { pinned: true } }),
+      prisma.entry.count({ where: { type: 'TASK', status: 'ACTIVE' } }),
+      prisma.environmentLink.count(),
+    ]);
+    return { inboxCount, pinsCount, activeTasksCount, linksCount };
+  });
+}

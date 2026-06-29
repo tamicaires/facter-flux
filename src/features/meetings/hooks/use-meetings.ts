@@ -26,6 +26,7 @@ export function useActiveMeeting() {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 60_000,
   });
 }
 
@@ -37,6 +38,7 @@ export function useMeetings(workspaceId?: string) {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 30_000,
   });
 }
 
@@ -60,6 +62,7 @@ export function useRecentMeetings(limit: number = 5) {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 30_000,
   });
 }
 

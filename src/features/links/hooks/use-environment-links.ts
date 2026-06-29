@@ -21,6 +21,7 @@ export function useEnvironmentLinks(workspaceId?: string) {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 60_000,
   });
 }
 

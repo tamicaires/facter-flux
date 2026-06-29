@@ -34,5 +34,6 @@ export function useEntries(params: UseEntriesParams = {}) {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 30_000,
   });
 }

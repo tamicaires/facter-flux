@@ -5,7 +5,6 @@ import {
   makeStartMeeting,
   makeEndMeeting,
   makeGetMeeting,
-  makeListMeetings,
 } from '@/infra/container';
 import { handleAction } from './helpers';
 import type { ActionResult } from './types';
@@ -82,12 +81,15 @@ export async function listMeetingsAction(
   workspaceId?: string,
 ): Promise<ActionResult<SerializedMeeting[]>> {
   return handleAction(async () => {
-    const useCase = makeListMeetings();
-    const meetings = await useCase.execute({ workspaceId });
-    const serialized = await Promise.all(
-      meetings.map((m) => fetchAndSerializeMeeting(m.id)),
-    );
-    return serialized;
+    const where: Record<string, unknown> = {};
+    if (workspaceId) where.workspaceId = workspaceId;
+
+    const meetings = await prisma.meeting.findMany({
+      where,
+      orderBy: { startedAt: 'desc' },
+      include: { workspace: true },
+    });
+    return meetings.map(serializeMeetingRaw);
   });
 }
 
@@ -106,11 +108,11 @@ export async function listRecentMeetingsAction(
   limit: number = 5,
 ): Promise<ActionResult<SerializedMeeting[]>> {
   return handleAction(async () => {
-    const useCase = makeListMeetings();
-    const meetings = await useCase.execute({ limit });
-    const serialized = await Promise.all(
-      meetings.map((m) => fetchAndSerializeMeeting(m.id)),
-    );
-    return serialized;
+    const meetings = await prisma.meeting.findMany({
+      orderBy: { startedAt: 'desc' },
+      take: limit,
+      include: { workspace: true },
+    });
+    return meetings.map(serializeMeetingRaw);
   });
 }

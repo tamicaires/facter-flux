@@ -106,6 +106,9 @@ model Meeting {
   workspace Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
   entries   Entry[]
 
+  @@index([endedAt])
+  @@index([startedAt])
+  @@index([workspaceId])
   @@map("meetings")
 }
 

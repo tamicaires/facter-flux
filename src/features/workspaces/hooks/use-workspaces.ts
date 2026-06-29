@@ -17,6 +17,7 @@ export function useWorkspaces() {
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
+    staleTime: 60_000,
   });
 }
 

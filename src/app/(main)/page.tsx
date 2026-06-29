@@ -17,7 +17,7 @@ import { Card, CardContent, Badge, Button, Skeleton, toast } from '@facter/ds-co
 import { useEntries } from '@/features/timeline/hooks/use-entries';
 import { useRecentMeetings } from '@/features/meetings/hooks/use-meetings';
 import { useMeetingSession } from '@/features/meetings/hooks/use-meeting-session';
-import { useEnvironmentLinks } from '@/features/links/hooks/use-environment-links';
+import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard-stats';
 import { StartMeetingDialog } from '@/features/meetings/components/start-meeting-dialog';
 import { EntryCard } from '@/features/timeline/components/entry-card';
 import { formatRelativeTime } from '@/shared/utils/date.utils';
@@ -56,19 +56,14 @@ export default function HomePage() {
   const [showStartDialog, setShowStartDialog] = useState(false);
   const { start: startSession, isActive: meetingActive, session, end: endMeeting } = useMeetingSession();
 
-  const { data: inboxData, isLoading: inboxLoading } = useEntries({ status: 'INBOX' });
-  const { data: pinnedData, isLoading: pinsLoading } = useEntries({ pinned: true });
-  const { data: tasksData, isLoading: tasksLoading } = useEntries({ type: 'TASK', status: 'ACTIVE' });
+  const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: recentData, isLoading: recentLoading } = useEntries({ perPage: 5 });
   const { data: recentMeetings, isLoading: meetingsLoading } = useRecentMeetings(3);
-  const { data: linksData } = useEnvironmentLinks();
 
-  const inboxCount = inboxData?.total ?? 0;
-  const linksCount = linksData?.length ?? 0;
-  const pinsCount = pinnedData?.total ?? 0;
-  const tasksCount = tasksData?.total ?? 0;
-
-  const statsLoading = inboxLoading || pinsLoading || tasksLoading;
+  const inboxCount = stats?.inboxCount ?? 0;
+  const pinsCount = stats?.pinsCount ?? 0;
+  const tasksCount = stats?.activeTasksCount ?? 0;
+  const linksCount = stats?.linksCount ?? 0;
 
   return (
     <div className="space-y-8">

@@ -64,6 +64,7 @@ export function useCapture() {
         toast.success('Entrada capturada');
         close();
         queryClient.invalidateQueries({ queryKey: ['entries'] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
       } else {
         toast.error(result.error);
       }

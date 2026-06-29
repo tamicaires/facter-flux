@@ -22,6 +22,7 @@ export function usePinEntry() {
     onSuccess: (data) => {
       toast.success(data.pinned ? 'Entrada fixada' : 'Entrada desfixada');
       queryClient.invalidateQueries({ queryKey: entryKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -41,6 +42,7 @@ export function useArchiveEntry() {
     onSuccess: () => {
       toast.success('Entrada arquivada');
       queryClient.invalidateQueries({ queryKey: entryKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -59,6 +61,7 @@ export function useDeleteEntry() {
     onSuccess: () => {
       toast.success('Entrada removida');
       queryClient.invalidateQueries({ queryKey: entryKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
     },
     onError: (error) => {
       toast.error(error.message);
@@ -78,6 +81,7 @@ export function useMarkDone() {
     onSuccess: () => {
       toast.success('Task concluida');
       queryClient.invalidateQueries({ queryKey: entryKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'stats'] });
     },
     onError: (error) => {
       toast.error(error.message);

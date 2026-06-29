@@ -55,11 +55,10 @@ export function CaptureBar() {
     return (
       <button
         onClick={open}
-        className="flex w-full items-center gap-2 rounded-lg border border-input bg-card px-4 py-3 text-sm text-muted-foreground hover:bg-accent transition-colors"
+        className="hidden md:flex w-full items-center gap-2 rounded-lg border border-input bg-card px-4 py-3 text-sm text-muted-foreground hover:bg-accent transition-colors"
       >
         <Zap className="h-4 w-4" />
-        <span className="sm:hidden">Capturar...</span>
-        <span className="hidden sm:inline">Ctrl+K para capturar...</span>
+        <span>Ctrl+K para capturar...</span>
       </button>
     );
   }

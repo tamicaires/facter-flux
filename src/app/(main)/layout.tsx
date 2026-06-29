@@ -5,6 +5,7 @@ import { Sidebar, MobileNav } from '@facter/ds-core';
 import { MainSidebar } from '@/components/layout/main-sidebar';
 import { ResponsiveNavbar } from '@/components/layout/responsive-navbar';
 import { CaptureBar } from '@/features/capture/components/capture-bar';
+import { CaptureFab } from '@/features/capture/components/capture-fab';
 import { SearchDialog } from '@/features/search/components/search-dialog';
 import { MeetingBanner } from '@/features/meetings/components/meeting-banner';
 import { mobileNavItems } from '@/config/navigation';
@@ -40,6 +41,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </main>
         </Sidebar.Content>
 
+        <CaptureFab />
         <MobileNav items={mobileItems} />
       </div>
 
