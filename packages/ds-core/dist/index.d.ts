@@ -704,10 +704,19 @@ declare const DataTable: typeof DataTableRoot & {
     ColumnHeader: typeof DataTableColumnHeader;
 };
 
-declare const Dialog: React$1.FC<DialogPrimitive.DialogProps>;
-declare const DialogTrigger: React$1.ForwardRefExoticComponent<DialogPrimitive.DialogTriggerProps & React$1.RefAttributes<HTMLButtonElement>>;
-declare const DialogPortal: React$1.FC<DialogPrimitive.DialogPortalProps>;
-declare const DialogClose: React$1.ForwardRefExoticComponent<DialogPrimitive.DialogCloseProps & React$1.RefAttributes<HTMLButtonElement>>;
+interface DialogProps {
+    children: React$1.ReactNode;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+    defaultOpen?: boolean;
+    modal?: boolean;
+    /** Force dialog mode even on mobile (default: false) */
+    disableResponsive?: boolean;
+}
+declare function Dialog({ children, disableResponsive, ...props }: DialogProps): react_jsx_runtime.JSX.Element;
+declare const DialogTrigger: React$1.ForwardRefExoticComponent<Omit<DialogPrimitive.DialogTriggerProps & React$1.RefAttributes<HTMLButtonElement>, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+declare const DialogClose: React$1.ForwardRefExoticComponent<Omit<DialogPrimitive.DialogCloseProps & React$1.RefAttributes<HTMLButtonElement>, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+declare function DialogPortal({ children, ...props }: DialogPrimitive.DialogPortalProps): react_jsx_runtime.JSX.Element;
 declare const DialogOverlay: React$1.NamedExoticComponent<Omit<DialogPrimitive.DialogOverlayProps & React$1.RefAttributes<HTMLDivElement>, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 declare const dialogContentVariants: (props?: ({
     size?: "sm" | "lg" | "md" | "xl" | "2xl" | "3xl" | "4xl" | "full" | null | undefined;

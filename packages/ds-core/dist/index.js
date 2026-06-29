@@ -13,6 +13,7 @@ var TabsPrimitive = require('@radix-ui/react-tabs');
 var reactTable = require('@tanstack/react-table');
 var CheckboxPrimitive = require('@radix-ui/react-checkbox');
 var DialogPrimitive = require('@radix-ui/react-dialog');
+var vaul = require('vaul');
 var sonner = require('sonner');
 var SwitchPrimitives = require('@radix-ui/react-switch');
 var reactHookForm = require('react-hook-form');
@@ -2532,6 +2533,26 @@ var DataTable = Object.assign(DataTableRoot, {
   // Column utilities (para uso em column definitions)
   ColumnHeader: DataTableColumnHeader
 });
+var MOBILE_BREAKPOINT = 768;
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React10__namespace.useState(false);
+  React10__namespace.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
+    const onChange = (e) => {
+      setIsMobile(e.matches);
+    };
+    onChange(mql);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+  return isMobile;
+}
+var ResponsiveContext = React10__namespace.createContext({
+  isMobile: false
+});
+function useResponsive() {
+  return React10__namespace.useContext(ResponsiveContext);
+}
 function DialogMeshEffect() {
   return /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "absolute top-0 left-0 right-0 h-[48px] overflow-hidden rounded-t-lg pointer-events-none z-[1]", children: [
     /* @__PURE__ */ jsxRuntime.jsx(
@@ -2564,24 +2585,76 @@ function DialogMeshEffect() {
     )
   ] });
 }
-var Dialog = DialogPrimitive__namespace.Root;
-var DialogTrigger = DialogPrimitive__namespace.Trigger;
-var DialogPortal = DialogPrimitive__namespace.Portal;
-var DialogClose = DialogPrimitive__namespace.Close;
+function DrawerHandle() {
+  return /* @__PURE__ */ jsxRuntime.jsx("div", { className: "mx-auto mt-2 mb-1 h-1.5 w-12 shrink-0 rounded-full bg-muted-foreground/20" });
+}
+var VaulRoot = vaul.Drawer.Root;
+var VaulPortal = vaul.Drawer.Portal;
+var VaulOverlay = vaul.Drawer.Overlay;
+var VaulContent = vaul.Drawer.Content;
+var VaulTrigger = vaul.Drawer.Trigger;
+var VaulClose = vaul.Drawer.Close;
+var VaulTitle = vaul.Drawer.Title;
+var VaulDescription = vaul.Drawer.Description;
+function Dialog({
+  children,
+  disableResponsive = false,
+  ...props
+}) {
+  const isMobile = useIsMobile();
+  const shouldUseDrawer = isMobile && !disableResponsive;
+  return /* @__PURE__ */ jsxRuntime.jsx(ResponsiveContext.Provider, { value: { isMobile: shouldUseDrawer }, children: shouldUseDrawer ? /* @__PURE__ */ jsxRuntime.jsx(VaulRoot, { shouldScaleBackground: true, ...props, children }) : /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Root, { ...props, children }) });
+}
+var DialogTrigger = React10__namespace.forwardRef(({ ...props }, ref) => {
+  const { isMobile } = useResponsive();
+  if (isMobile) {
+    return /* @__PURE__ */ jsxRuntime.jsx(VaulTrigger, { ref, ...props });
+  }
+  return /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Trigger, { ref, ...props });
+});
+DialogTrigger.displayName = "DialogTrigger";
+var DialogClose = React10__namespace.forwardRef(({ ...props }, ref) => {
+  const { isMobile } = useResponsive();
+  if (isMobile) {
+    return /* @__PURE__ */ jsxRuntime.jsx(VaulClose, { ref, ...props });
+  }
+  return /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Close, { ref, ...props });
+});
+DialogClose.displayName = "DialogClose";
+function DialogPortal({ children, ...props }) {
+  const { isMobile } = useResponsive();
+  if (isMobile) {
+    return /* @__PURE__ */ jsxRuntime.jsx(VaulPortal, { ...props, children });
+  }
+  return /* @__PURE__ */ jsxRuntime.jsx(DialogPrimitive__namespace.Portal, { ...props, children });
+}
 var DialogOverlay = React10__namespace.memo(
-  React10__namespace.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntime.jsx(
-    DialogPrimitive__namespace.Overlay,
-    {
-      ref,
-      className: cn(
-        "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-        className
-      ),
-      ...props
+  React10__namespace.forwardRef(({ className, ...props }, ref) => {
+    const { isMobile } = useResponsive();
+    if (isMobile) {
+      return /* @__PURE__ */ jsxRuntime.jsx(
+        VaulOverlay,
+        {
+          ref,
+          className: cn("fixed inset-0 z-50 bg-black/80", className),
+          ...props
+        }
+      );
     }
-  ))
+    return /* @__PURE__ */ jsxRuntime.jsx(
+      DialogPrimitive__namespace.Overlay,
+      {
+        ref,
+        className: cn(
+          "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+          className
+        ),
+        ...props
+      }
+    );
+  })
 );
-DialogOverlay.displayName = DialogPrimitive__namespace.Overlay.displayName;
+DialogOverlay.displayName = "DialogOverlay";
 var dialogContentVariants = classVarianceAuthority.cva(
   [
     "fixed left-[50%] top-[50%] z-50",
@@ -2615,38 +2688,67 @@ var dialogContentVariants = classVarianceAuthority.cva(
   }
 );
 var DialogContent = React10__namespace.memo(
-  React10__namespace.forwardRef(({ className, children, showCloseButton = true, disableMeshEffect = false, size, ...props }, ref) => /* @__PURE__ */ jsxRuntime.jsxs(DialogPortal, { children: [
-    /* @__PURE__ */ jsxRuntime.jsx(DialogOverlay, {}),
-    /* @__PURE__ */ jsxRuntime.jsxs(
-      DialogPrimitive__namespace.Content,
-      {
-        ref,
-        className: cn(dialogContentVariants({ size, className }), "overflow-hidden"),
-        ...props,
-        children: [
-          !disableMeshEffect && /* @__PURE__ */ jsxRuntime.jsx(DialogMeshEffect, {}),
-          children,
-          showCloseButton && /* @__PURE__ */ jsxRuntime.jsxs(DialogPrimitive__namespace.Close, { className: "absolute right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground", children: [
-            /* @__PURE__ */ jsxRuntime.jsx(lucideReact.X, { className: "h-4 w-4" }),
-            /* @__PURE__ */ jsxRuntime.jsx("span", { className: "sr-only", children: "Fechar" })
-          ] })
-        ]
-      }
-    )
-  ] }))
-);
-DialogContent.displayName = DialogPrimitive__namespace.Content.displayName;
-var DialogHeader = React10__namespace.memo(
-  ({ className, ...props }) => /* @__PURE__ */ jsxRuntime.jsx(
-    "div",
-    {
-      className: cn(
-        "flex flex-col space-y-1.5 text-center sm:text-left",
-        className
-      ),
-      ...props
+  React10__namespace.forwardRef(({ className, children, showCloseButton = true, disableMeshEffect = false, size, ...props }, ref) => {
+    const { isMobile } = useResponsive();
+    if (isMobile) {
+      return /* @__PURE__ */ jsxRuntime.jsxs(VaulPortal, { children: [
+        /* @__PURE__ */ jsxRuntime.jsx(VaulOverlay, { className: "fixed inset-0 z-50 bg-black/80" }),
+        /* @__PURE__ */ jsxRuntime.jsxs(
+          VaulContent,
+          {
+            ref,
+            className: cn(
+              "fixed inset-x-0 bottom-0 z-50 mt-24 flex max-h-[96svh] flex-col rounded-t-xl border bg-background",
+              className
+            ),
+            children: [
+              /* @__PURE__ */ jsxRuntime.jsx(DrawerHandle, {}),
+              /* @__PURE__ */ jsxRuntime.jsxs("div", { className: "overflow-y-auto p-6 pt-2", children: [
+                !disableMeshEffect && /* @__PURE__ */ jsxRuntime.jsx(DialogMeshEffect, {}),
+                children
+              ] })
+            ]
+          }
+        )
+      ] });
     }
-  )
+    return /* @__PURE__ */ jsxRuntime.jsxs(DialogPortal, { children: [
+      /* @__PURE__ */ jsxRuntime.jsx(DialogOverlay, {}),
+      /* @__PURE__ */ jsxRuntime.jsxs(
+        DialogPrimitive__namespace.Content,
+        {
+          ref,
+          className: cn(dialogContentVariants({ size, className }), "overflow-hidden"),
+          ...props,
+          children: [
+            !disableMeshEffect && /* @__PURE__ */ jsxRuntime.jsx(DialogMeshEffect, {}),
+            children,
+            showCloseButton && /* @__PURE__ */ jsxRuntime.jsxs(DialogPrimitive__namespace.Close, { className: "absolute right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground", children: [
+              /* @__PURE__ */ jsxRuntime.jsx(lucideReact.X, { className: "h-4 w-4" }),
+              /* @__PURE__ */ jsxRuntime.jsx("span", { className: "sr-only", children: "Fechar" })
+            ] })
+          ]
+        }
+      )
+    ] });
+  })
+);
+DialogContent.displayName = "DialogContent";
+var DialogHeader = React10__namespace.memo(
+  ({ className, ...props }) => {
+    const { isMobile } = useResponsive();
+    return /* @__PURE__ */ jsxRuntime.jsx(
+      "div",
+      {
+        className: cn(
+          "flex flex-col space-y-1.5",
+          isMobile ? "text-left" : "text-center sm:text-left",
+          className
+        ),
+        ...props
+      }
+    );
+  }
 );
 DialogHeader.displayName = "DialogHeader";
 var DialogFooter = React10__namespace.memo(
@@ -2663,30 +2765,59 @@ var DialogFooter = React10__namespace.memo(
 );
 DialogFooter.displayName = "DialogFooter";
 var DialogTitle = React10__namespace.memo(
-  React10__namespace.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntime.jsx(
-    DialogPrimitive__namespace.Title,
-    {
-      ref,
-      className: cn(
-        "text-2xl font-semibold leading-none tracking-tight font-heading",
-        className
-      ),
-      ...props
+  React10__namespace.forwardRef(({ className, ...props }, ref) => {
+    const { isMobile } = useResponsive();
+    if (isMobile) {
+      return /* @__PURE__ */ jsxRuntime.jsx(
+        VaulTitle,
+        {
+          ref,
+          className: cn(
+            "text-2xl font-semibold leading-none tracking-tight font-heading",
+            className
+          ),
+          ...props
+        }
+      );
     }
-  ))
+    return /* @__PURE__ */ jsxRuntime.jsx(
+      DialogPrimitive__namespace.Title,
+      {
+        ref,
+        className: cn(
+          "text-2xl font-semibold leading-none tracking-tight font-heading",
+          className
+        ),
+        ...props
+      }
+    );
+  })
 );
-DialogTitle.displayName = DialogPrimitive__namespace.Title.displayName;
+DialogTitle.displayName = "DialogTitle";
 var DialogDescription = React10__namespace.memo(
-  React10__namespace.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxRuntime.jsx(
-    DialogPrimitive__namespace.Description,
-    {
-      ref,
-      className: cn("text-sm text-muted-foreground", className),
-      ...props
+  React10__namespace.forwardRef(({ className, ...props }, ref) => {
+    const { isMobile } = useResponsive();
+    if (isMobile) {
+      return /* @__PURE__ */ jsxRuntime.jsx(
+        VaulDescription,
+        {
+          ref,
+          className: cn("text-sm text-muted-foreground", className),
+          ...props
+        }
+      );
     }
-  ))
+    return /* @__PURE__ */ jsxRuntime.jsx(
+      DialogPrimitive__namespace.Description,
+      {
+        ref,
+        className: cn("text-sm text-muted-foreground", className),
+        ...props
+      }
+    );
+  })
 );
-DialogDescription.displayName = DialogPrimitive__namespace.Description.displayName;
+DialogDescription.displayName = "DialogDescription";
 var DialogBody = React10__namespace.memo(
   ({ className, ...props }) => /* @__PURE__ */ jsxRuntime.jsx("div", { className: cn("flex-1 overflow-y-auto py-2", className), ...props })
 );
