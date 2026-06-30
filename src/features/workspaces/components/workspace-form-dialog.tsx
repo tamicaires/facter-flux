@@ -19,8 +19,18 @@ const WORKSPACE_COLORS = [
   '#8b5cf6', '#ec4899', '#06b6d4', '#f97316',
 ];
 
-export function WorkspaceFormDialog() {
-  const [open, setOpen] = useState(false);
+interface WorkspaceFormDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children?: React.ReactNode;
+}
+
+export function WorkspaceFormDialog({ open: controlledOpen, onOpenChange, children }: WorkspaceFormDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
+
   const [name, setName] = useState('');
   const [color, setColor] = useState(WORKSPACE_COLORS[0]);
   const createMutation = useCreateWorkspace();
@@ -37,12 +47,16 @@ export function WorkspaceFormDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" />
-          Novo Workspace
-        </Button>
-      </DialogTrigger>
+      {children ? (
+        <DialogTrigger asChild>{children}</DialogTrigger>
+      ) : (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <Plus className="h-4 w-4" />
+            Novo Workspace
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Criar Workspace</DialogTitle>
