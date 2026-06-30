@@ -2,11 +2,12 @@
 
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from '@facter/ds-core';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   MeetingSessionContext,
   useMeetingSessionState,
 } from '@/features/meetings/hooks/use-meeting-session';
-import { useActiveMeeting, useEndMeeting } from '@/features/meetings/hooks/use-meetings';
+import { useActiveMeeting, useEndMeeting, meetingKeys } from '@/features/meetings/hooks/use-meetings';
 import { MeetingSummaryDialog } from '@/features/meetings/components/meeting-summary-dialog';
 import { StartMeetingDialog } from '@/features/meetings/components/start-meeting-dialog';
 import type { MeetingSummary, SerializedMeeting } from '@/shared/types/meeting.types';
@@ -18,6 +19,7 @@ interface MeetingSessionProviderProps {
 export function MeetingSessionProvider({ children }: MeetingSessionProviderProps) {
   const state = useMeetingSessionState();
   const endMutation = useEndMeeting();
+  const queryClient = useQueryClient();
   const { data: activeMeeting } = useActiveMeeting();
   const [showStartDialog, setShowStartDialog] = useState(false);
   const [summaryData, setSummaryData] = useState<{
@@ -35,9 +37,12 @@ export function MeetingSessionProvider({ children }: MeetingSessionProviderProps
   const handleEnd = useCallback(async () => {
     if (!state.meetingId) return;
     const result = await endMutation.mutateAsync(state.meetingId);
+    // Clear cached active meeting BEFORE stopping the session
+    // to prevent the hydration effect from re-starting it
+    queryClient.setQueryData(meetingKeys.active(), null);
     state.stop();
     setSummaryData(result);
-  }, [state.meetingId, endMutation, state.stop]);
+  }, [state.meetingId, endMutation, state.stop, queryClient]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

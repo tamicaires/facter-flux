@@ -34,9 +34,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
           <main className="flex-1 p-4 pt-20 pb-20 md:pb-4 lg:p-6 lg:pt-20">
             <MeetingBanner />
-            <div className="mb-6">
-              <CaptureBar />
-            </div>
+            <CaptureBar />
             {children}
           </main>
         </Sidebar.Content>

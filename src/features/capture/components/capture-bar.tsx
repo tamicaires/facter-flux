@@ -55,7 +55,7 @@ export function CaptureBar() {
     return (
       <button
         onClick={open}
-        className="hidden md:flex w-full items-center gap-2 rounded-lg border border-input bg-card px-4 py-3 text-sm text-muted-foreground hover:bg-accent transition-colors"
+        className="hidden md:flex w-full items-center gap-2 rounded-lg border border-input bg-card px-4 py-3 mb-6 text-sm text-muted-foreground hover:bg-accent transition-colors"
       >
         <Zap className="h-4 w-4" />
         <span>Ctrl+K para capturar...</span>
@@ -64,7 +64,7 @@ export function CaptureBar() {
   }
 
   return (
-    <div className="rounded-lg border border-primary bg-card shadow-lg">
+    <div className="mb-6 rounded-lg border border-primary bg-card shadow-lg">
       <div className="flex items-center gap-2 p-3">
         {isSubmitting || isSuggesting ? (
           <Loader2 className="h-4 w-4 animate-spin text-primary" />
