@@ -1,13 +1,12 @@
 import NextAuth from 'next-auth';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import Credentials from 'next-auth/providers/credentials';
-import Google from 'next-auth/providers/google';
-import GitHub from 'next-auth/providers/github';
 import { z } from 'zod';
 import { prisma } from '@/infra/database/prisma';
 import { PrismaUsersRepository } from '@/infra/repositories/prisma-users.repository';
 import { BcryptHashService } from '@/infra/services/bcrypt-hash.service';
 import { AuthenticateUser } from '@/core/use-cases/auth/authenticate-user';
+import { authConfig } from './auth.config';
 
 const credentialsSchema = z.object({
   email: z.string().email(),
@@ -15,15 +14,10 @@ const credentialsSchema = z.object({
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
-  pages: {
-    signIn: '/auth/login',
-    error: '/auth/error',
-  },
   providers: [
-    Google,
-    GitHub,
+    ...authConfig.providers.filter((p) => typeof p === 'function' || !('type' in p) || p.type !== 'credentials'),
     Credentials({
       credentials: {
         email: { label: 'Email', type: 'email' },
@@ -51,18 +45,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user?.id) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token.id && session.user) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
-  },
 });
