@@ -4,7 +4,7 @@ import { WorkspacesRepository } from '@/core/domain/repositories/workspaces.repo
 export class ListWorkspaces {
   constructor(private workspacesRepository: WorkspacesRepository) {}
 
-  async execute(): Promise<Workspace[]> {
-    return this.workspacesRepository.findAll();
+  async execute(userId: string): Promise<Workspace[]> {
+    return this.workspacesRepository.findAll(userId);
   }
 }

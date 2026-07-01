@@ -27,7 +27,7 @@ describe('EndMeeting', () => {
       await entriesRepo.create(makeEntry({ meetingId: meeting.id, type: 'TASK' }));
       await entriesRepo.create(makeEntry({ meetingId: meeting.id, type: 'LINK' }));
 
-      const result = await sut.execute(meeting.id);
+      const result = await sut.execute({ id: meeting.id, userId: '00000000-0000-0000-0000-000000000001' });
 
       expect(result.meeting.endedAt).toBeInstanceOf(Date);
       expect(result.summary.totalEntries).toBe(4);
@@ -43,7 +43,7 @@ describe('EndMeeting', () => {
       const meeting = makeMeeting();
       await meetingsRepo.create(meeting);
 
-      const result = await sut.execute(meeting.id);
+      const result = await sut.execute({ id: meeting.id, userId: '00000000-0000-0000-0000-000000000001' });
 
       expect(result.summary.totalEntries).toBe(0);
       expect(result.summary.byType).toEqual({});
@@ -52,9 +52,9 @@ describe('EndMeeting', () => {
 
   describe('error scenarios', () => {
     it('should throw MeetingNotFoundError for non-existent meeting', async () => {
-      await expect(sut.execute('non-existent-id')).rejects.toThrow(
-        MeetingNotFoundError,
-      );
+      await expect(
+        sut.execute({ id: 'non-existent-id', userId: '00000000-0000-0000-0000-000000000001' }),
+      ).rejects.toThrow(MeetingNotFoundError);
     });
   });
 });

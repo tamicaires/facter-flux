@@ -14,23 +14,25 @@ export class PrismaWorkspacesRepository extends WorkspacesRepository {
       slug: raw.slug as string,
       color: raw.color as string,
       icon: raw.icon as string | null,
+      userId: raw.userId as string,
       createdAt: raw.createdAt as Date,
       updatedAt: raw.updatedAt as Date,
     });
   }
 
-  async findById(id: string): Promise<Workspace | null> {
-    const raw = await this.prisma.workspace.findUnique({ where: { id } });
+  async findById(id: string, userId: string): Promise<Workspace | null> {
+    const raw = await this.prisma.workspace.findFirst({ where: { id, userId } });
     return raw ? this.toDomain(raw as unknown as Record<string, unknown>) : null;
   }
 
-  async findBySlug(slug: string): Promise<Workspace | null> {
-    const raw = await this.prisma.workspace.findUnique({ where: { slug } });
+  async findBySlug(slug: string, userId: string): Promise<Workspace | null> {
+    const raw = await this.prisma.workspace.findFirst({ where: { slug, userId } });
     return raw ? this.toDomain(raw as unknown as Record<string, unknown>) : null;
   }
 
-  async findAll(): Promise<Workspace[]> {
+  async findAll(userId: string): Promise<Workspace[]> {
     const raw = await this.prisma.workspace.findMany({
+      where: { userId },
       orderBy: { name: 'asc' },
     });
     return raw.map((w) => this.toDomain(w as unknown as Record<string, unknown>));
@@ -44,6 +46,7 @@ export class PrismaWorkspacesRepository extends WorkspacesRepository {
         slug: workspace.slug,
         color: workspace.color,
         icon: workspace.icon,
+        userId: workspace.userId,
       },
     });
     return this.toDomain(raw as unknown as Record<string, unknown>);
@@ -63,7 +66,7 @@ export class PrismaWorkspacesRepository extends WorkspacesRepository {
     return this.toDomain(raw as unknown as Record<string, unknown>);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.workspace.delete({ where: { id } });
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.workspace.deleteMany({ where: { id, userId } });
   }
 }

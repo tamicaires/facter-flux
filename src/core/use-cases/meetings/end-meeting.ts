@@ -4,6 +4,11 @@ import { MeetingNotFoundError } from '@/core/domain/errors/meeting-not-found.err
 import type { Meeting } from '@/core/domain/entities/meeting';
 import type { MeetingSummary } from '@/shared/types/meeting.types';
 
+interface EndMeetingRequest {
+  id: string;
+  userId: string;
+}
+
 interface EndMeetingResult {
   meeting: Meeting;
   summary: MeetingSummary;
@@ -15,17 +20,17 @@ export class EndMeeting {
     private entriesRepository: EntriesRepository,
   ) {}
 
-  async execute(id: string): Promise<EndMeetingResult> {
-    const meeting = await this.meetingsRepository.findById(id);
+  async execute(data: EndMeetingRequest): Promise<EndMeetingResult> {
+    const meeting = await this.meetingsRepository.findById(data.id, data.userId);
     if (!meeting) {
-      throw new MeetingNotFoundError(id);
+      throw new MeetingNotFoundError(data.id);
     }
 
     meeting.end();
     const updated = await this.meetingsRepository.update(meeting);
 
     const entries = await this.entriesRepository.findMany(
-      { meetingId: id },
+      { userId: data.userId, meetingId: data.id },
       { page: 1, perPage: 1000 },
     );
 

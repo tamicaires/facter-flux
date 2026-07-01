@@ -16,11 +16,12 @@ describe('CreateEntry', () => {
 
   describe('success scenarios', () => {
     it('should create a NOTE entry with INBOX status by default', async () => {
-      const entry = await sut.execute({ content: 'My first note' });
+      const entry = await sut.execute({ content: 'My first note', userId: '00000000-0000-0000-0000-000000000001' });
 
       expect(entry.content).toBe('My first note');
       expect(entry.type).toBe('NOTE');
       expect(entry.status).toBe('INBOX');
+      expect(entry.userId).toBe('00000000-0000-0000-0000-000000000001');
       expect(entry.id).toBeDefined();
       expect(entriesRepo.items).toHaveLength(1);
     });
@@ -30,6 +31,7 @@ describe('CreateEntry', () => {
         content: 'Fix the login bug',
         type: 'TASK',
         assignee: 'Sobreira',
+        userId: '00000000-0000-0000-0000-000000000001',
       });
 
       expect(entry.type).toBe('TASK');
@@ -44,6 +46,7 @@ describe('CreateEntry', () => {
           url: 'https://argocd.martech.uat.example.com',
           environment: 'uat',
         },
+        userId: '00000000-0000-0000-0000-000000000001',
       });
 
       expect(entry.type).toBe('LINK');
@@ -57,6 +60,7 @@ describe('CreateEntry', () => {
       const entry = await sut.execute({
         content: 'Entry with workspace',
         workspaceId: '550e8400-e29b-41d4-a716-446655440000',
+        userId: '00000000-0000-0000-0000-000000000001',
       });
 
       expect(entry.status).toBe('ACTIVE');
@@ -67,6 +71,7 @@ describe('CreateEntry', () => {
       await sut.execute({
         content: 'Note with tags',
         tags: ['argocd', 'deploy'],
+        userId: '00000000-0000-0000-0000-000000000001',
       });
 
       expect(tagsRepo.items).toHaveLength(2);
@@ -76,8 +81,8 @@ describe('CreateEntry', () => {
     });
 
     it('should not duplicate tags on findOrCreate', async () => {
-      await sut.execute({ content: 'First note', tags: ['argocd'] });
-      await sut.execute({ content: 'Second note', tags: ['argocd'] });
+      await sut.execute({ content: 'First note', tags: ['argocd'], userId: '00000000-0000-0000-0000-000000000001' });
+      await sut.execute({ content: 'Second note', tags: ['argocd'], userId: '00000000-0000-0000-0000-000000000001' });
 
       expect(tagsRepo.items).toHaveLength(1);
     });

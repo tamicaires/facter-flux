@@ -5,54 +5,52 @@ import {
   makeStartMeeting,
   makeEndMeeting,
   makeGetMeeting,
+  makeListMeetings,
+  makeGetActiveMeeting,
+  makeListRecentMeetings,
+  makeCheckPlanLimit,
 } from '@/infra/container';
 import { handleAction } from './helpers';
 import type { ActionResult } from './types';
 import { serializeDate } from '@/shared/utils/serialize.utils';
-import { prisma } from '@/infra/database/prisma';
 import type { SerializedMeeting, MeetingSummary } from '@/shared/types/meeting.types';
+import { getSessionUser } from '@/lib/get-session-user';
+import { env } from '@/config/env';
 
 const startMeetingSchema = z.object({
   name: z.string().min(1),
   workspaceId: z.string().uuid().nullable().optional(),
 });
 
-function serializeMeetingRaw(raw: {
+function serializeMeeting(meeting: {
   id: string;
   name: string;
   workspaceId: string | null;
   startedAt: Date;
   endedAt: Date | null;
   createdAt: Date;
-  workspace?: { id: string; name: string; slug: string; color: string } | null;
 }): SerializedMeeting {
   return {
-    id: raw.id,
-    name: raw.name,
-    workspaceId: raw.workspaceId,
-    startedAt: serializeDate(raw.startedAt),
-    endedAt: raw.endedAt ? serializeDate(raw.endedAt) : null,
-    createdAt: serializeDate(raw.createdAt),
-    workspace: raw.workspace ?? null,
+    id: meeting.id,
+    name: meeting.name,
+    workspaceId: meeting.workspaceId,
+    startedAt: serializeDate(meeting.startedAt),
+    endedAt: meeting.endedAt ? serializeDate(meeting.endedAt) : null,
+    createdAt: serializeDate(meeting.createdAt),
+    workspace: null,
   };
-}
-
-async function fetchAndSerializeMeeting(id: string): Promise<SerializedMeeting> {
-  const raw = await prisma.meeting.findUniqueOrThrow({
-    where: { id },
-    include: { workspace: true },
-  });
-  return serializeMeetingRaw(raw);
 }
 
 export async function startMeetingAction(
   input: z.infer<typeof startMeetingSchema>,
 ): Promise<ActionResult<SerializedMeeting>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
+    if (env.BILLING_ENABLED) await makeCheckPlanLimit().execute({ userId, resource: 'meeting' });
     const data = startMeetingSchema.parse(input);
     const useCase = makeStartMeeting();
-    const meeting = await useCase.execute(data);
-    return fetchAndSerializeMeeting(meeting.id);
+    const meeting = await useCase.execute({ ...data, userId });
+    return serializeMeeting(meeting);
   });
 }
 
@@ -60,10 +58,10 @@ export async function endMeetingAction(
   id: string,
 ): Promise<ActionResult<{ meeting: SerializedMeeting; summary: MeetingSummary }>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeEndMeeting();
-    const result = await useCase.execute(id);
-    const serialized = await fetchAndSerializeMeeting(result.meeting.id);
-    return { meeting: serialized, summary: result.summary };
+    const result = await useCase.execute({ id, userId });
+    return { meeting: serializeMeeting(result.meeting), summary: result.summary };
   });
 }
 
@@ -71,9 +69,10 @@ export async function getMeetingAction(
   id: string,
 ): Promise<ActionResult<SerializedMeeting>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeGetMeeting();
-    await useCase.execute(id);
-    return fetchAndSerializeMeeting(id);
+    const meeting = await useCase.execute({ id, userId });
+    return serializeMeeting(meeting);
   });
 }
 
@@ -81,26 +80,19 @@ export async function listMeetingsAction(
   workspaceId?: string,
 ): Promise<ActionResult<SerializedMeeting[]>> {
   return handleAction(async () => {
-    const where: Record<string, unknown> = {};
-    if (workspaceId) where.workspaceId = workspaceId;
-
-    const meetings = await prisma.meeting.findMany({
-      where,
-      orderBy: { startedAt: 'desc' },
-      include: { workspace: true },
-    });
-    return meetings.map(serializeMeetingRaw);
+    const { id: userId } = await getSessionUser();
+    const useCase = makeListMeetings();
+    const meetings = await useCase.execute({ userId, workspaceId });
+    return meetings.map(serializeMeeting);
   });
 }
 
 export async function getActiveMeetingAction(): Promise<ActionResult<SerializedMeeting | null>> {
   return handleAction(async () => {
-    const active = await prisma.meeting.findFirst({
-      where: { endedAt: null },
-      orderBy: { startedAt: 'desc' },
-      include: { workspace: true },
-    });
-    return active ? serializeMeetingRaw(active) : null;
+    const { id: userId } = await getSessionUser();
+    const useCase = makeGetActiveMeeting();
+    const meeting = await useCase.execute(userId);
+    return meeting ? serializeMeeting(meeting) : null;
   });
 }
 
@@ -108,11 +100,9 @@ export async function listRecentMeetingsAction(
   limit: number = 5,
 ): Promise<ActionResult<SerializedMeeting[]>> {
   return handleAction(async () => {
-    const meetings = await prisma.meeting.findMany({
-      orderBy: { startedAt: 'desc' },
-      take: limit,
-      include: { workspace: true },
-    });
-    return meetings.map(serializeMeetingRaw);
+    const { id: userId } = await getSessionUser();
+    const useCase = makeListRecentMeetings();
+    const meetings = await useCase.execute({ userId, limit });
+    return meetings.map(serializeMeeting);
   });
 }

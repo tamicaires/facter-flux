@@ -11,6 +11,7 @@ export const entrySchema = z.object({
   metadata: z.record(z.unknown()).nullable().optional(),
   source: z.enum(['MANUAL', 'QUICK_CAPTURE', 'MEETING', 'IMPORT']).default('MANUAL'),
   meetingId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid(),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
 });
@@ -29,6 +30,7 @@ export class Entry {
   metadata: Record<string, unknown> | null;
   source: 'MANUAL' | 'QUICK_CAPTURE' | 'MEETING' | 'IMPORT';
   meetingId: string | null;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -44,6 +46,7 @@ export class Entry {
     this.metadata = parsed.metadata ?? null;
     this.source = parsed.source;
     this.meetingId = parsed.meetingId ?? null;
+    this.userId = parsed.userId;
     this.createdAt = parsed.createdAt;
     this.updatedAt = parsed.updatedAt;
   }

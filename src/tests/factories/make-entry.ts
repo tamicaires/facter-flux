@@ -5,6 +5,7 @@ export function makeEntry(overrides: Partial<EntryProps> = {}): Entry {
     content: 'Test entry content',
     type: 'NOTE',
     status: 'INBOX',
+    userId: '00000000-0000-0000-0000-000000000001',
     ...overrides,
   });
 }

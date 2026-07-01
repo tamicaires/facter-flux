@@ -15,26 +15,28 @@ export class PrismaEnvironmentLinksRepository extends EnvironmentLinksRepository
       environment: raw.environment as string,
       url: raw.url as string,
       order: raw.order as number,
+      userId: raw.userId as string,
       createdAt: raw.createdAt as Date,
       updatedAt: raw.updatedAt as Date,
     });
   }
 
-  async findById(id: string): Promise<EnvironmentLink | null> {
-    const raw = await this.prisma.environmentLink.findUnique({ where: { id } });
+  async findById(id: string, userId: string): Promise<EnvironmentLink | null> {
+    const raw = await this.prisma.environmentLink.findFirst({ where: { id, userId } });
     return raw ? this.toDomain(raw as unknown as Record<string, unknown>) : null;
   }
 
-  async findByWorkspace(workspaceId: string): Promise<EnvironmentLink[]> {
+  async findByWorkspace(workspaceId: string, userId: string): Promise<EnvironmentLink[]> {
     const raw = await this.prisma.environmentLink.findMany({
-      where: { workspaceId },
+      where: { workspaceId, userId },
       orderBy: [{ serviceName: 'asc' }, { order: 'asc' }],
     });
     return raw.map((l) => this.toDomain(l as unknown as Record<string, unknown>));
   }
 
-  async findAll(): Promise<EnvironmentLink[]> {
+  async findAll(userId: string): Promise<EnvironmentLink[]> {
     const raw = await this.prisma.environmentLink.findMany({
+      where: { userId },
       orderBy: [{ workspaceId: 'asc' }, { serviceName: 'asc' }, { order: 'asc' }],
       include: { workspace: true },
     });
@@ -50,12 +52,17 @@ export class PrismaEnvironmentLinksRepository extends EnvironmentLinksRepository
         environment: link.environment,
         url: link.url,
         order: link.order,
+        userId: link.userId,
       },
     });
     return this.toDomain(raw as unknown as Record<string, unknown>);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.environmentLink.delete({ where: { id } });
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.environmentLink.deleteMany({ where: { id, userId } });
+  }
+
+  async countAll(userId: string): Promise<number> {
+    return this.prisma.environmentLink.count({ where: { userId } });
   }
 }

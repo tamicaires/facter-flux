@@ -3,17 +3,22 @@
 import { z } from 'zod';
 import {
   makeCreateEntry,
+  makeListEntries,
   makeUpdateEntry,
   makeDeleteEntry,
   makePinEntry,
   makeArchiveEntry,
+  makeGetDashboardStats,
+  makeCheckPlanLimit,
 } from '@/infra/container';
 import { handleAction } from './helpers';
 import type { ActionResult } from './types';
 import { serializeDate } from '@/shared/utils/serialize.utils';
 import type { SerializedEntry } from '@/shared/types/entry.types';
 import type { PaginatedResult } from '@/shared/types/common.types';
-import { prisma } from '@/infra/database/prisma';
+import type { DashboardStats } from '@/core/domain/repositories/entries.repository';
+import { getSessionUser } from '@/lib/get-session-user';
+import { env } from '@/config/env';
 
 const createEntrySchema = z.object({
   content: z.string().min(1),
@@ -47,18 +52,7 @@ const listEntriesSchema = z.object({
   perPage: z.number().int().min(1).max(100).default(50),
 });
 
-async function fetchAndSerializeEntry(entryId: string): Promise<SerializedEntry> {
-  const raw = await prisma.entry.findUniqueOrThrow({
-    where: { id: entryId },
-    include: {
-      tags: { include: { tag: true } },
-      workspace: true,
-    },
-  });
-  return serializeEntryRaw(raw);
-}
-
-function serializeEntryRaw(raw: {
+function serializeEntry(entry: {
   id: string;
   content: string;
   type: string;
@@ -71,35 +65,22 @@ function serializeEntryRaw(raw: {
   meetingId: string | null;
   createdAt: Date;
   updatedAt: Date;
-  tags: Array<{ tag: { id: string; name: string; color: string | null } }>;
-  workspace: { id: string; name: string; slug: string; color: string } | null;
 }): SerializedEntry {
   return {
-    id: raw.id,
-    content: raw.content,
-    type: raw.type as SerializedEntry['type'],
-    status: raw.status as SerializedEntry['status'],
-    workspaceId: raw.workspaceId,
-    assignee: raw.assignee,
-    pinned: raw.pinned,
-    metadata: raw.metadata as SerializedEntry['metadata'],
-    source: raw.source as SerializedEntry['source'],
-    meetingId: raw.meetingId,
-    createdAt: serializeDate(raw.createdAt),
-    updatedAt: serializeDate(raw.updatedAt),
-    tags: raw.tags.map((et) => ({
-      id: et.tag.id,
-      name: et.tag.name,
-      color: et.tag.color,
-    })),
-    workspace: raw.workspace
-      ? {
-          id: raw.workspace.id,
-          name: raw.workspace.name,
-          slug: raw.workspace.slug,
-          color: raw.workspace.color,
-        }
-      : null,
+    id: entry.id,
+    content: entry.content,
+    type: entry.type as SerializedEntry['type'],
+    status: entry.status as SerializedEntry['status'],
+    workspaceId: entry.workspaceId,
+    assignee: entry.assignee,
+    pinned: entry.pinned,
+    metadata: entry.metadata as SerializedEntry['metadata'],
+    source: entry.source as SerializedEntry['source'],
+    meetingId: entry.meetingId,
+    createdAt: serializeDate(entry.createdAt),
+    updatedAt: serializeDate(entry.updatedAt),
+    tags: [],
+    workspace: null,
   };
 }
 
@@ -107,10 +88,12 @@ export async function createEntryAction(
   input: z.infer<typeof createEntrySchema>,
 ): Promise<ActionResult<SerializedEntry>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
+    if (env.BILLING_ENABLED) await makeCheckPlanLimit().execute({ userId, resource: 'entry' });
     const data = createEntrySchema.parse(input);
     const useCase = makeCreateEntry();
-    const entry = await useCase.execute(data);
-    return fetchAndSerializeEntry(entry.id);
+    const entry = await useCase.execute({ ...data, userId });
+    return serializeEntry(entry);
   });
 }
 
@@ -118,36 +101,27 @@ export async function listEntriesAction(
   input: z.infer<typeof listEntriesSchema>,
 ): Promise<ActionResult<PaginatedResult<SerializedEntry>>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const data = listEntriesSchema.parse(input);
-    const skip = (data.page - 1) * data.perPage;
-
-    const where: Record<string, unknown> = {};
-    if (data.workspaceId) where.workspaceId = data.workspaceId;
-    if (data.status) where.status = data.status;
-    if (data.type) where.type = data.type;
-    if (data.pinned !== undefined) where.pinned = data.pinned;
-    if (data.meetingId) where.meetingId = data.meetingId;
-
-    const [entries, total] = await Promise.all([
-      prisma.entry.findMany({
-        where,
-        skip,
-        take: data.perPage,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          tags: { include: { tag: true } },
-          workspace: true,
-        },
-      }),
-      prisma.entry.count({ where }),
-    ]);
+    const useCase = makeListEntries();
+    const result = await useCase.execute({
+      filters: {
+        userId,
+        workspaceId: data.workspaceId,
+        status: data.status,
+        type: data.type,
+        pinned: data.pinned,
+        meetingId: data.meetingId,
+      },
+      pagination: { page: data.page, perPage: data.perPage },
+    });
 
     return {
-      data: entries.map(serializeEntryRaw),
-      total,
-      page: data.page,
-      perPage: data.perPage,
-      totalPages: Math.ceil(total / data.perPage),
+      data: result.data.map(serializeEntry),
+      total: result.total,
+      page: result.page,
+      perPage: result.perPage,
+      totalPages: result.totalPages,
     };
   });
 }
@@ -156,51 +130,44 @@ export async function updateEntryAction(
   input: z.infer<typeof updateEntrySchema>,
 ): Promise<ActionResult<SerializedEntry>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const data = updateEntrySchema.parse(input);
     const useCase = makeUpdateEntry();
-    const entry = await useCase.execute(data);
-    return fetchAndSerializeEntry(entry.id);
+    const entry = await useCase.execute({ ...data, userId });
+    return serializeEntry(entry);
   });
 }
 
 export async function deleteEntryAction(id: string): Promise<ActionResult<void>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeDeleteEntry();
-    await useCase.execute(id);
+    await useCase.execute({ id, userId });
   });
 }
 
 export async function pinEntryAction(id: string): Promise<ActionResult<SerializedEntry>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makePinEntry();
-    const entry = await useCase.execute(id);
-    return fetchAndSerializeEntry(entry.id);
+    const entry = await useCase.execute({ id, userId });
+    return serializeEntry(entry);
   });
 }
 
 export async function archiveEntryAction(id: string): Promise<ActionResult<SerializedEntry>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeArchiveEntry();
-    const entry = await useCase.execute(id);
-    return fetchAndSerializeEntry(entry.id);
+    const entry = await useCase.execute({ id, userId });
+    return serializeEntry(entry);
   });
-}
-
-export interface DashboardStats {
-  inboxCount: number;
-  pinsCount: number;
-  activeTasksCount: number;
-  linksCount: number;
 }
 
 export async function getDashboardStatsAction(): Promise<ActionResult<DashboardStats>> {
   return handleAction(async () => {
-    const [inboxCount, pinsCount, activeTasksCount, linksCount] = await Promise.all([
-      prisma.entry.count({ where: { status: 'INBOX' } }),
-      prisma.entry.count({ where: { pinned: true } }),
-      prisma.entry.count({ where: { type: 'TASK', status: 'ACTIVE' } }),
-      prisma.environmentLink.count(),
-    ]);
-    return { inboxCount, pinsCount, activeTasksCount, linksCount };
+    const { id: userId } = await getSessionUser();
+    const useCase = makeGetDashboardStats();
+    return useCase.execute(userId);
   });
 }

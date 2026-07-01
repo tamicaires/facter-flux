@@ -3,3 +3,7 @@ export { EntryNotFoundError } from './entry-not-found.error';
 export { WorkspaceNotFoundError } from './workspace-not-found.error';
 export { DuplicateTagError } from './duplicate-tag.error';
 export { MeetingNotFoundError } from './meeting-not-found.error';
+export { UnauthorizedError } from './unauthorized.error';
+export { InvalidCredentialsError } from './invalid-credentials.error';
+export { UserAlreadyExistsError } from './user-already-exists.error';
+export { PlanLimitExceededError } from './plan-limit-exceeded.error';

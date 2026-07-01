@@ -18,7 +18,7 @@ describe('DeleteEntry', () => {
       const entry = makeEntry();
       entriesRepo.items.push(entry);
 
-      await sut.execute(entry.id);
+      await sut.execute({ id: entry.id, userId: '00000000-0000-0000-0000-000000000001' });
 
       expect(entriesRepo.items).toHaveLength(0);
     });
@@ -27,7 +27,7 @@ describe('DeleteEntry', () => {
   describe('error scenarios', () => {
     it('should throw EntryNotFoundError if entry does not exist', async () => {
       await expect(
-        sut.execute('550e8400-e29b-41d4-a716-446655440000'),
+        sut.execute({ id: '550e8400-e29b-41d4-a716-446655440000', userId: '00000000-0000-0000-0000-000000000001' }),
       ).rejects.toThrow(EntryNotFoundError);
     });
   });

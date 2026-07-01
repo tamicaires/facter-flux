@@ -4,33 +4,34 @@ import { MeetingsRepository } from '@/core/domain/repositories/meetings.reposito
 export class InMemoryMeetingsRepository extends MeetingsRepository {
   public items: Meeting[] = [];
 
-  async findById(id: string): Promise<Meeting | null> {
-    return this.items.find((m) => m.id === id) ?? null;
+  async findById(id: string, userId: string): Promise<Meeting | null> {
+    return this.items.find((m) => m.id === id && m.userId === userId) ?? null;
   }
 
-  async findActive(): Promise<Meeting | null> {
+  async findActive(userId: string): Promise<Meeting | null> {
     return (
       [...this.items]
-        .filter((m) => m.endedAt === null)
+        .filter((m) => m.userId === userId && m.endedAt === null)
         .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())[0] ?? null
     );
   }
 
-  async findAll(): Promise<Meeting[]> {
-    return [...this.items].sort(
-      (a, b) => b.startedAt.getTime() - a.startedAt.getTime(),
-    );
+  async findAll(userId: string): Promise<Meeting[]> {
+    return this.items
+      .filter((m) => m.userId === userId)
+      .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
   }
 
-  async findRecent(limit: number): Promise<Meeting[]> {
-    return [...this.items]
+  async findRecent(userId: string, limit: number): Promise<Meeting[]> {
+    return this.items
+      .filter((m) => m.userId === userId)
       .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
       .slice(0, limit);
   }
 
-  async findByWorkspaceId(workspaceId: string): Promise<Meeting[]> {
+  async findByWorkspaceId(workspaceId: string, userId: string): Promise<Meeting[]> {
     return this.items
-      .filter((m) => m.workspaceId === workspaceId)
+      .filter((m) => m.workspaceId === workspaceId && m.userId === userId)
       .sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime());
   }
 

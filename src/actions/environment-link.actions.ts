@@ -9,6 +9,7 @@ import {
 import { handleAction } from './helpers';
 import type { ActionResult } from './types';
 import { serializeDate } from '@/shared/utils/serialize.utils';
+import { getSessionUser } from '@/lib/get-session-user';
 
 const createLinkSchema = z.object({
   workspaceId: z.string().uuid(),
@@ -55,9 +56,10 @@ export async function createEnvironmentLinkAction(
   input: z.infer<typeof createLinkSchema>,
 ): Promise<ActionResult<SerializedEnvironmentLink>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const data = createLinkSchema.parse(input);
     const useCase = makeCreateEnvironmentLink();
-    const link = await useCase.execute(data);
+    const link = await useCase.execute({ ...data, userId });
     return serializeLink(link);
   });
 }
@@ -66,15 +68,17 @@ export async function listEnvironmentLinksAction(
   workspaceId?: string,
 ): Promise<ActionResult<SerializedEnvironmentLink[]>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeListEnvironmentLinks();
-    const links = await useCase.execute(workspaceId);
+    const links = await useCase.execute({ userId, workspaceId });
     return links.map(serializeLink);
   });
 }
 
 export async function deleteEnvironmentLinkAction(id: string): Promise<ActionResult<void>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeDeleteEnvironmentLink();
-    await useCase.execute(id);
+    await useCase.execute({ id, userId });
   });
 }

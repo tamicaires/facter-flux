@@ -4,16 +4,18 @@ import { WorkspacesRepository } from '@/core/domain/repositories/workspaces.repo
 export class InMemoryWorkspacesRepository extends WorkspacesRepository {
   public items: Workspace[] = [];
 
-  async findById(id: string): Promise<Workspace | null> {
-    return this.items.find((w) => w.id === id) ?? null;
+  async findById(id: string, userId: string): Promise<Workspace | null> {
+    return this.items.find((w) => w.id === id && w.userId === userId) ?? null;
   }
 
-  async findBySlug(slug: string): Promise<Workspace | null> {
-    return this.items.find((w) => w.slug === slug) ?? null;
+  async findBySlug(slug: string, userId: string): Promise<Workspace | null> {
+    return this.items.find((w) => w.slug === slug && w.userId === userId) ?? null;
   }
 
-  async findAll(): Promise<Workspace[]> {
-    return [...this.items].sort((a, b) => a.name.localeCompare(b.name));
+  async findAll(userId: string): Promise<Workspace[]> {
+    return this.items
+      .filter((w) => w.userId === userId)
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async create(workspace: Workspace): Promise<Workspace> {
@@ -29,7 +31,7 @@ export class InMemoryWorkspacesRepository extends WorkspacesRepository {
     return workspace;
   }
 
-  async delete(id: string): Promise<void> {
-    this.items = this.items.filter((w) => w.id !== id);
+  async delete(id: string, userId: string): Promise<void> {
+    this.items = this.items.filter((w) => !(w.id === id && w.userId === userId));
   }
 }

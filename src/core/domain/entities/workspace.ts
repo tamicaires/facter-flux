@@ -6,6 +6,7 @@ export const workspaceSchema = z.object({
   slug: z.string().min(1).max(100),
   color: z.string().min(1),
   icon: z.string().nullable().optional(),
+  userId: z.string().uuid(),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
 });
@@ -19,6 +20,7 @@ export class Workspace {
   slug: string;
   color: string;
   icon: string | null;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -29,6 +31,7 @@ export class Workspace {
     this.slug = parsed.slug;
     this.color = parsed.color;
     this.icon = parsed.icon ?? null;
+    this.userId = parsed.userId;
     this.createdAt = parsed.createdAt;
     this.updatedAt = parsed.updatedAt;
   }

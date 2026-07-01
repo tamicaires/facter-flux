@@ -23,6 +23,7 @@ describe('UpdateEntry', () => {
 
       const updated = await sut.execute({
         id: entry.id,
+        userId: '00000000-0000-0000-0000-000000000001',
         content: 'Updated content',
       });
 
@@ -35,6 +36,7 @@ describe('UpdateEntry', () => {
 
       const updated = await sut.execute({
         id: entry.id,
+        userId: '00000000-0000-0000-0000-000000000001',
         type: 'TASK',
       });
 
@@ -47,6 +49,7 @@ describe('UpdateEntry', () => {
 
       await sut.execute({
         id: entry.id,
+        userId: '00000000-0000-0000-0000-000000000001',
         tags: ['new-tag', 'another-tag'],
       });
 
@@ -59,6 +62,7 @@ describe('UpdateEntry', () => {
       await expect(
         sut.execute({
           id: '550e8400-e29b-41d4-a716-446655440000',
+          userId: '00000000-0000-0000-0000-000000000001',
           content: 'Update',
         }),
       ).rejects.toThrow(EntryNotFoundError);

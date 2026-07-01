@@ -5,6 +5,7 @@ export const tagSchema = z.object({
   name: z.string().min(1).max(50),
   color: z.string().nullable().optional(),
   workspaceId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid(),
   createdAt: z.date().default(() => new Date()),
 });
 
@@ -16,6 +17,7 @@ export class Tag {
   name: string;
   color: string | null;
   workspaceId: string | null;
+  userId: string;
   createdAt: Date;
 
   constructor(data: TagInput) {
@@ -24,6 +26,7 @@ export class Tag {
     this.name = parsed.name.toLowerCase();
     this.color = parsed.color ?? null;
     this.workspaceId = parsed.workspaceId ?? null;
+    this.userId = parsed.userId;
     this.createdAt = parsed.createdAt;
   }
 }

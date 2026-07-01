@@ -8,21 +8,25 @@ export class InMemoryTagsRepository extends TagsRepository {
     return this.items.find((t) => t.id === id) ?? null;
   }
 
-  async findByName(name: string, workspaceId?: string | null): Promise<Tag | null> {
+  async findByName(name: string, userId: string, workspaceId?: string | null): Promise<Tag | null> {
     return (
       this.items.find(
-        (t) => t.name === name.toLowerCase() && t.workspaceId === (workspaceId ?? null),
+        (t) =>
+          t.name === name.toLowerCase() &&
+          t.userId === userId &&
+          t.workspaceId === (workspaceId ?? null),
       ) ?? null
     );
   }
 
-  async findAll(workspaceId?: string): Promise<Tag[]> {
+  async findAll(userId: string, workspaceId?: string): Promise<Tag[]> {
+    const userTags = this.items.filter((t) => t.userId === userId);
     if (workspaceId) {
-      return this.items.filter(
+      return userTags.filter(
         (t) => t.workspaceId === workspaceId || t.workspaceId === null,
       );
     }
-    return [...this.items];
+    return [...userTags];
   }
 
   async create(tag: Tag): Promise<Tag> {
@@ -30,13 +34,14 @@ export class InMemoryTagsRepository extends TagsRepository {
     return tag;
   }
 
-  async findOrCreate(name: string, workspaceId?: string | null): Promise<Tag> {
-    const existing = await this.findByName(name, workspaceId);
+  async findOrCreate(name: string, userId: string, workspaceId?: string | null): Promise<Tag> {
+    const existing = await this.findByName(name, userId, workspaceId);
     if (existing) return existing;
 
     const tag = new Tag({
       name,
       workspaceId: workspaceId ?? null,
+      userId,
     });
     return this.create(tag);
   }

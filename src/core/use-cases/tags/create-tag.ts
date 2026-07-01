@@ -6,13 +6,14 @@ interface CreateTagRequest {
   name: string;
   color?: string | null;
   workspaceId?: string | null;
+  userId: string;
 }
 
 export class CreateTag {
   constructor(private tagsRepository: TagsRepository) {}
 
   async execute(data: CreateTagRequest): Promise<Tag> {
-    const existing = await this.tagsRepository.findByName(data.name, data.workspaceId ?? null);
+    const existing = await this.tagsRepository.findByName(data.name, data.userId, data.workspaceId ?? null);
     if (existing) {
       throw new DuplicateTagError(data.name);
     }
@@ -21,6 +22,7 @@ export class CreateTag {
       name: data.name,
       color: data.color ?? null,
       workspaceId: data.workspaceId ?? null,
+      userId: data.userId,
     });
 
     return this.tagsRepository.create(tag);

@@ -7,6 +7,7 @@ export const environmentLinkSchema = z.object({
   environment: z.string().min(1),
   url: z.string().url(),
   order: z.number().int().default(0),
+  userId: z.string().uuid(),
   createdAt: z.date().default(() => new Date()),
   updatedAt: z.date().default(() => new Date()),
 });
@@ -21,6 +22,7 @@ export class EnvironmentLink {
   environment: string;
   url: string;
   order: number;
+  userId: string;
   createdAt: Date;
   updatedAt: Date;
 
@@ -32,6 +34,7 @@ export class EnvironmentLink {
     this.environment = parsed.environment;
     this.url = parsed.url;
     this.order = parsed.order;
+    this.userId = parsed.userId;
     this.createdAt = parsed.createdAt;
     this.updatedAt = parsed.updatedAt;
   }

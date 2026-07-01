@@ -13,6 +13,7 @@ interface CreateEntryRequest {
   source?: EntrySource;
   meetingId?: string | null;
   tags?: string[];
+  userId: string;
 }
 
 export class CreateEntry {
@@ -36,12 +37,13 @@ export class CreateEntry {
       metadata: (data.metadata as Record<string, unknown>) ?? null,
       source: data.source ?? 'MANUAL',
       meetingId: data.meetingId ?? null,
+      userId: data.userId,
     });
 
     const tagIds: string[] = [];
     if (data.tags && data.tags.length > 0) {
       for (const tagName of data.tags) {
-        const tag = await this.tagsRepository.findOrCreate(tagName, data.workspaceId);
+        const tag = await this.tagsRepository.findOrCreate(tagName, data.userId, data.workspaceId);
         tagIds.push(tag.id);
       }
     }

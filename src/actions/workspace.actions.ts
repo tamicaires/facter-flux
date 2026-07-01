@@ -6,11 +6,14 @@ import {
   makeUpdateWorkspace,
   makeDeleteWorkspace,
   makeListWorkspaces,
+  makeCheckPlanLimit,
 } from '@/infra/container';
 import { handleAction } from './helpers';
 import type { ActionResult } from './types';
 import { serializeDate } from '@/shared/utils/serialize.utils';
 import type { SerializedWorkspace } from '@/shared/types/workspace.types';
+import { getSessionUser } from '@/lib/get-session-user';
+import { env } from '@/config/env';
 
 const createWorkspaceSchema = z.object({
   name: z.string().min(1).max(100),
@@ -41,9 +44,11 @@ export async function createWorkspaceAction(
   input: z.infer<typeof createWorkspaceSchema>,
 ): Promise<ActionResult<SerializedWorkspace>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
+    if (env.BILLING_ENABLED) await makeCheckPlanLimit().execute({ userId, resource: 'workspace' });
     const data = createWorkspaceSchema.parse(input);
     const useCase = makeCreateWorkspace();
-    const workspace = await useCase.execute(data);
+    const workspace = await useCase.execute({ ...data, userId });
     return serializeWorkspace(workspace);
   });
 }
@@ -52,24 +57,27 @@ export async function updateWorkspaceAction(
   input: z.infer<typeof updateWorkspaceSchema>,
 ): Promise<ActionResult<SerializedWorkspace>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const data = updateWorkspaceSchema.parse(input);
     const useCase = makeUpdateWorkspace();
-    const workspace = await useCase.execute(data);
+    const workspace = await useCase.execute({ ...data, userId });
     return serializeWorkspace(workspace);
   });
 }
 
 export async function deleteWorkspaceAction(id: string): Promise<ActionResult<void>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeDeleteWorkspace();
-    await useCase.execute(id);
+    await useCase.execute({ id, userId });
   });
 }
 
 export async function listWorkspacesAction(): Promise<ActionResult<SerializedWorkspace[]>> {
   return handleAction(async () => {
+    const { id: userId } = await getSessionUser();
     const useCase = makeListWorkspaces();
-    const workspaces = await useCase.execute();
+    const workspaces = await useCase.execute(userId);
     return workspaces.map(serializeWorkspace);
   });
 }

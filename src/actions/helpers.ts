@@ -1,6 +1,6 @@
 'use server';
 
-import { DomainError } from '@/core/domain/errors';
+import { DomainError, UnauthorizedError } from '@/core/domain/errors';
 import type { ActionResult } from './types';
 
 export type { ActionResult };
@@ -10,6 +10,9 @@ export async function handleAction<T>(fn: () => Promise<T>): Promise<ActionResul
     const data = await fn();
     return { success: true, data };
   } catch (error) {
+    if (error instanceof UnauthorizedError) {
+      return { success: false, error: 'Not authenticated' };
+    }
     if (error instanceof DomainError) {
       return { success: false, error: error.message };
     }

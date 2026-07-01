@@ -6,6 +6,7 @@ import type { EntryType, EntryStatus, EntryMetadata } from '@/shared/types/entry
 
 interface UpdateEntryRequest {
   id: string;
+  userId: string;
   content?: string;
   type?: EntryType;
   status?: EntryStatus;
@@ -22,7 +23,7 @@ export class UpdateEntry {
   ) {}
 
   async execute(data: UpdateEntryRequest): Promise<Entry> {
-    const entry = await this.entriesRepository.findById(data.id);
+    const entry = await this.entriesRepository.findById(data.id, data.userId);
     if (!entry) {
       throw new EntryNotFoundError(data.id);
     }
@@ -39,7 +40,7 @@ export class UpdateEntry {
     if (data.tags) {
       tagIds = [];
       for (const tagName of data.tags) {
-        const tag = await this.tagsRepository.findOrCreate(tagName, entry.workspaceId);
+        const tag = await this.tagsRepository.findOrCreate(tagName, data.userId, entry.workspaceId);
         tagIds.push(tag.id);
       }
     }

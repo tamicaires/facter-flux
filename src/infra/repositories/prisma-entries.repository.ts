@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { Entry } from '@/core/domain/entities/entry';
-import { EntriesRepository, type EntryFilters } from '@/core/domain/repositories/entries.repository';
+import { EntriesRepository, type EntryFilters, type DashboardStats } from '@/core/domain/repositories/entries.repository';
 import type { PaginatedResult, PaginationParams } from '@/shared/types/common.types';
 
 export class PrismaEntriesRepository extends EntriesRepository {
@@ -20,13 +20,14 @@ export class PrismaEntriesRepository extends EntriesRepository {
       metadata: raw.metadata as Record<string, unknown> | null,
       source: raw.source as Entry['source'],
       meetingId: raw.meetingId as string | null,
+      userId: raw.userId as string,
       createdAt: raw.createdAt as Date,
       updatedAt: raw.updatedAt as Date,
     });
   }
 
   private buildWhere(filters: EntryFilters) {
-    const where: Record<string, unknown> = {};
+    const where: Record<string, unknown> = { userId: filters.userId };
     if (filters.workspaceId) where.workspaceId = filters.workspaceId;
     if (filters.status) where.status = filters.status;
     if (filters.type) where.type = filters.type;
@@ -38,8 +39,8 @@ export class PrismaEntriesRepository extends EntriesRepository {
     return where;
   }
 
-  async findById(id: string): Promise<Entry | null> {
-    const raw = await this.prisma.entry.findUnique({ where: { id } });
+  async findById(id: string, userId: string): Promise<Entry | null> {
+    const raw = await this.prisma.entry.findFirst({ where: { id, userId } });
     return raw ? this.toDomain(raw as unknown as Record<string, unknown>) : null;
   }
 
@@ -86,6 +87,7 @@ export class PrismaEntriesRepository extends EntriesRepository {
         metadata: (entry.metadata as Prisma.InputJsonValue) ?? Prisma.JsonNull,
         source: entry.source,
         meetingId: entry.meetingId,
+        userId: entry.userId,
         tags: tagIds && tagIds.length > 0
           ? { create: tagIds.map((tagId) => ({ tagId })) }
           : undefined,
@@ -120,8 +122,18 @@ export class PrismaEntriesRepository extends EntriesRepository {
     return this.toDomain(raw as unknown as Record<string, unknown>);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.prisma.entry.delete({ where: { id } });
+  async delete(id: string, userId: string): Promise<void> {
+    await this.prisma.entry.deleteMany({ where: { id, userId } });
+  }
+
+  async getDashboardStats(userId: string): Promise<DashboardStats> {
+    const [inboxCount, pinsCount, activeTasksCount, linksCount] = await Promise.all([
+      this.prisma.entry.count({ where: { userId, status: 'INBOX' } }),
+      this.prisma.entry.count({ where: { userId, pinned: true } }),
+      this.prisma.entry.count({ where: { userId, type: 'TASK', status: 'ACTIVE' } }),
+      this.prisma.environmentLink.count({ where: { userId } }),
+    ]);
+    return { inboxCount, pinsCount, activeTasksCount, linksCount };
   }
 
   async search(

@@ -4,6 +4,7 @@ import { WorkspaceNotFoundError } from '@/core/domain/errors';
 
 interface UpdateWorkspaceRequest {
   id: string;
+  userId: string;
   name?: string;
   color?: string;
   icon?: string | null;
@@ -13,7 +14,7 @@ export class UpdateWorkspace {
   constructor(private workspacesRepository: WorkspacesRepository) {}
 
   async execute(data: UpdateWorkspaceRequest): Promise<Workspace> {
-    const workspace = await this.workspacesRepository.findById(data.id);
+    const workspace = await this.workspacesRepository.findById(data.id, data.userId);
     if (!workspace) {
       throw new WorkspaceNotFoundError(data.id);
     }

@@ -6,6 +6,7 @@ interface CreateWorkspaceRequest {
   name: string;
   color: string;
   icon?: string | null;
+  userId: string;
 }
 
 export class CreateWorkspace {
@@ -14,13 +15,14 @@ export class CreateWorkspace {
   async execute(data: CreateWorkspaceRequest): Promise<Workspace> {
     const slug = generateSlug(data.name);
 
-    const existing = await this.workspacesRepository.findBySlug(slug);
+    const existing = await this.workspacesRepository.findBySlug(slug, data.userId);
     if (existing) {
       const workspace = new Workspace({
         name: data.name,
         slug: `${slug}-${Date.now()}`,
         color: data.color,
         icon: data.icon ?? null,
+        userId: data.userId,
       });
       return this.workspacesRepository.create(workspace);
     }
@@ -30,6 +32,7 @@ export class CreateWorkspace {
       slug,
       color: data.color,
       icon: data.icon ?? null,
+      userId: data.userId,
     });
 
     return this.workspacesRepository.create(workspace);

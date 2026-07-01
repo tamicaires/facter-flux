@@ -9,6 +9,7 @@ interface CreateEnvironmentLinkRequest {
   environment: string;
   url: string;
   order?: number;
+  userId: string;
 }
 
 export class CreateEnvironmentLink {
@@ -18,7 +19,7 @@ export class CreateEnvironmentLink {
   ) {}
 
   async execute(data: CreateEnvironmentLinkRequest): Promise<EnvironmentLink> {
-    const workspace = await this.workspacesRepository.findById(data.workspaceId);
+    const workspace = await this.workspacesRepository.findById(data.workspaceId, data.userId);
     if (!workspace) {
       throw new WorkspaceNotFoundError(data.workspaceId);
     }
@@ -29,6 +30,7 @@ export class CreateEnvironmentLink {
       environment: data.environment,
       url: data.url,
       order: data.order ?? 0,
+      userId: data.userId,
     });
 
     return this.environmentLinksRepository.create(link);
